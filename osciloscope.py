@@ -5,28 +5,28 @@ import serial
 import numpy as np
 val = [ ]
 cnt = 0
-port = serial.Serial('/dev/tty.usbserial-B00054LQ', 115200, timeout=0.5)
+data_stream = np.zeros(50)
+port = serial.Serial('COM3', 115200, timeout=0.5)
 plt.figure()
-p = plt.plot(0, 'ro-', label='Channel 0')
+p = plt.plot(data_stream, 'ro-', label='Channel 0')
 plt.ylim(-1023,1023)
 plt.title('Osciloscope')
 plt.grid(True)
 plt.ylabel('ADC outputs')
 plt.legend(loc='lower right')
-# plt.show()
 plt.ion()     
-
+plt.show()
+plt.pause(.0001)
 while (True):
     port.write(b's') #handshake with Arduino
     if (port.inWaiting()):# if the arduino replies
+        data_stream = np.roll(data_stream,1,0)
         value = port.readline()# read the reply
         number = float(str(value[:-2])[2:-1]) #convert received data to integer 
         time.sleep(0.01)
-        val.append(int(number))
-        p[0].set_ydata(val)
-        p[0].set_xdata(list(range(len(val))))
+        data_stream[-1] = number
+        p[0].set_ydata(data_stream)
+        p[0].set_xdata(list(range(len(data_stream))))
         plt.draw()
-        plt.pause(.000001)
+        plt.pause(.0001)
         cnt = cnt+1
-    if(cnt>50):
-        val.pop(0)#keep the plot fresh by deleting the data at position 0
